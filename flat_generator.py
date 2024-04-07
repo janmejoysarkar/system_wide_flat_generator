@@ -5,6 +5,7 @@ Created on Sun Feb 11 08:22:32 2024
 
 -Generated to create system wide flat field from off pointing data.
 -Uses lighten blending mode.
+-2024-04-08: Modified to use with scatter corrected, masked data
 @author: janmejoy
 """
 import matplotlib.pyplot as plt
@@ -56,13 +57,12 @@ if __name__=='__main__':
     
     # ---- USER-DEFINED ----
     ftrname="NB02"
-    #folder="/data1/janmejoy/system_wide_flat/"+ftrname+"/averaged_files/"
-    folder='/data1/janmejoy/system_wide_flat/NB02/single_files_from_each_day_lvl0_shtr0/'
-    sav= "/data1/janmejoy/system_wide_flat/"+ftrname+"/"
+    folder=os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/system_wide_flat_project/data/processed/'+ftrname+'/masked_scatter_corrected_averaged_files/')
+    sav= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/system_wide_flat_project/products/shtr_0_reduced_avg_files_flat/')
     shtr= "0"
     #thres=0
-    savename= "reduced_avg_files_flat"
-    save= False
+    savename= "masked_scatter_corrected_reduced_avg_files_flat"
+    save= True
     # ----------------------
     
     files= os.listdir(folder)
