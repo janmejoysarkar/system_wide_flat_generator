@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Apr  7 20:02:47 2024
-Created to remove scatter from images
+Created to remove scatter from images.
+Pass list of averaged images to this program. This will apply scatter correction
+and mask the off disk features.
 @author: janmejoyarch
 """
 import os
@@ -22,17 +24,25 @@ def plot(data, col, row):
     plt.plot(col, row, 'o', color='r')
     plt.title(file[-44:])
     plt.show()
+    plt.close()
 
 if __name__=='__main__':
     ### USER DEFINED ###
-    folder= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/system_wide_flat_project/data/processed/NB02/averaged_files/')
-    sc_file= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/system_wide_flat_project/references/sun_center_averaged_files_NB02.txt')
-    scatter_file= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/system_wide_flat_project/data/external/NB2_scat_shtr0_lvl0.fits')
-    sav= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/system_wide_flat_project/data/processed/NB02/masked_scatter_corrected_averaged_files/')
+    ftrname= 'NB01'
     scatter_correction=True
     visualize=True
     writefits=True
     #####################
+    
+    print("Generating files for", ftrname)
+    project_path= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/system_wide_flat_project/')
+    folder= project_path+'data/interim/'+ftrname+'/averaged_files/'
+    sc_file= project_path+'references/sun_center_averaged_files_NB02.txt'
+    #contains sun center information of each pointing.
+    scatter_file= project_path+'data/external/'+ftrname+'_scat_0_lvl_0.fits'
+    #contains scatter file for that filter
+    sav= project_path+'data/processed/'+ftrname+'/masked_scatter_corrected_averaged_files/'
+
     
     filelist= sorted(glob.glob(folder+"*"))
     sc_info= np.loadtxt(sc_file, skiprows=1, usecols=(1,2))
