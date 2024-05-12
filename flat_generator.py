@@ -75,7 +75,7 @@ def plot(data, caption): #plots any numpy array with imshow (caption= image titl
 if __name__=='__main__':
     
     #### USER-DEFINED ####
-    ftrname="NB02"
+    ftrname="BB03"
     project_path= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/system_wide_flat_project/')
     folder=project_path+'data/processed/'+ftrname+'/masked_scatter_corrected_averaged_files/'
     sav= project_path+'products/shtr_0_reduced_avg_files_flat/'
