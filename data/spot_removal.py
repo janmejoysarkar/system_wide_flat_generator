@@ -3,6 +3,8 @@
 """
 Created on Sat May 11 17:41:34 2024
 -Created to patch up sun spots on the Sun image for flat field generation.
+-To be used on masked scatter corrected images. For NB08, scatter file is not available.
+Being done without scatter correction for NB08.
 2024-05-12- Used 1 px erosion to remove bright spots. Used Dilation filter 
 to reduce sun spots.
 @author: janmejoyarch
@@ -16,7 +18,7 @@ import glob
 from skimage.morphology import dilation, disk, erosion
 
 ####### USER-DEFINED #########
-ftr_name='BB03'
+ftr_name='NB08'
 overwrite=True #Files in the 'data/processed' directory will be replaced.
 plot=False
 ##############################

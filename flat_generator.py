@@ -65,6 +65,15 @@ def profile(data, row, col):
         ax.grid() 
     plt.show()
     
+def prep_header(mfg, data_date):
+    header=fits.Header()
+    header['VERSION']=('beta', 'Version name for the Flat Field')
+    header['FTR_NAME']=(ftrname, 'Filter Name for SUIT')
+    header['SHTR_STR']=(shtr, 'Shutter start position (0 or 180)')
+    header['MFG_DATE']=(mfg, 'Manufacturing date for the FITS file')
+    header['DATADATE']=(data_date,'Date of raw data recording')
+    return (header)
+
 def plot(data, caption): #plots any numpy array with imshow (caption= image title)
     plt.figure()
     plt.imshow(data, origin='lower')
@@ -74,8 +83,10 @@ def plot(data, caption): #plots any numpy array with imshow (caption= image titl
 
 if __name__=='__main__':
     
+    ftr_list= ["NB01", "NB02", "NB03", "NB04", "NB05", "NB06", 
+               "NB07", "NB08", "BB01", "BB02", "BB03"]
     #### USER-DEFINED ####
-    ftrname="BB03"
+    ftrname="NB08"
     project_path= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/system_wide_flat_project/')
     folder=project_path+'data/processed/'+ftrname+'/masked_scatter_corrected_averaged_files/'
     sav= project_path+'products/shtr_0_reduced_avg_files_flat/'
@@ -83,8 +94,9 @@ if __name__=='__main__':
     save= True #toggle to False to not save the image
     savename= "masked_scatter_corrected_reduced_avg_files_flat"
     shtr= "0" #to be used in saved filename
-
+    head=prep_header('2024-05-19', '2024-01-29')
     #######################
+    
     print("Generating Flat for", ftrname)
     files= os.listdir(folder)
     img_ls=[]
@@ -99,8 +111,11 @@ if __name__=='__main__':
     
     #removes large scale pattern from small scale removed image
     flat_field= blur(small_scale_removed_img/large_scale_img, 100) 
+    flat_field_lvl1= np.transpose(flat_field)
+    
+    hdu= fits.PrimaryHDU(flat_field_lvl1, header=head)
     #saves the fits file
-    if save==True : fits.writeto(sav+ftrname+'_shtr_'+shtr+"_"+savename+'.fits', flat_field, overwrite=True)
+    if save==True : hdu.writeto(sav+ftrname+'_shtr_'+shtr+"_"+savename+'_lvl1.fits', flat_field_lvl1, overwrite=True)
     
     #visualization
     profile(flat_field, 2048, 2048) #to plot image profile

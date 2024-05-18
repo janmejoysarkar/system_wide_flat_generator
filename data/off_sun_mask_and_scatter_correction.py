@@ -28,8 +28,8 @@ def plot(data, col, row):
 
 if __name__=='__main__':
     ### USER DEFINED ###
-    ftrname= 'BB03'
-    scatter_correction=True
+    ftrname= 'NB08'
+    scatter_correction=False
     visualize=True
     writefits=True
     #####################
@@ -46,7 +46,7 @@ if __name__=='__main__':
     
     filelist= sorted(glob.glob(folder+"*"))
     sc_info= np.loadtxt(sc_file, skiprows=1, usecols=(1,2))
-    scatter_data= fits.open(scatter_file)[0].data
+    if scatter_correction==True: scatter_data= fits.open(scatter_file)[0].data
     
     for file, sc in zip(filelist, sc_info):    
         data=fits.open(file)[0].data
