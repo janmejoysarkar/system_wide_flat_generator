@@ -51,8 +51,8 @@ def profile(ftrname, data, row, col):
     '''
     fig= plt.figure(figsize=(8,4), dpi=300)
     (ax1, ax2)=fig.subplots(1,2)
-    plt.suptitle("Intensity profiles across flat field- "+ftrname)   
-    ax1.imshow(data, origin='lower')
+    plt.suptitle(mfg_date+"_Intensity profiles across flat field- "+ftrname)   
+    ax1.imshow(data, origin='lower', vmin=0.9, vmax=1.1)
     ax1.axhline(row, color='red')
     ax1.axvline(col, color='blue')
     ax1.set(ylabel="Pixels")
@@ -64,6 +64,7 @@ def profile(ftrname, data, row, col):
     for ax in (ax1, ax2):
         ax.set(xlabel="Pixels")    
         ax.grid() 
+    plt.savefig(f'{project_path}reports/runtime_reports/{ftrname}.pdf')
     plt.show()
     
 def prep_header(ftrname, mfg, data_date):
@@ -82,7 +83,6 @@ def plot(data, caption): #plots any numpy array with imshow (caption= image titl
     plt.show()
 
 def flat_generator(ftrname):
-    project_path= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/system_wide_flat_project/')
     folder=project_path+'data/processed/'+ftrname+'/masked_scatter_corrected_averaged_files/'
     sav= project_path+'products/shtr_0_reduced_avg_files_flat_lvl1/'
     #thres=0
@@ -113,10 +113,13 @@ def flat_generator(ftrname):
     profile(ftrname, flat_field, 2048, 2048) #to plot image profile
 
     #statistics
+    print("***************")
+    print(ftrname)
     print("Pos(200px Box) \t %Std, Mean")
     print("(1000, 1000)", calib_status(flat_field, 1000, 1000, 100))
     print("(2000, 2000)",calib_status(flat_field, 2000, 2000, 100))
     print("(3000, 3000)",calib_status(flat_field, 3000, 3000, 100))
+    print("***************")
     
     
 if __name__=='__main__':
@@ -126,6 +129,8 @@ if __name__=='__main__':
     mfg_date, data_date= '2024-05-19', '2024-01-29'
     save= True #toggle to False to not save the image
     shtr= "0" #to be used in saved filename
+    project_path= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/system_wide_flat_project/')
+
     ftr_list= ["NB01", "NB02", "NB03", "NB04", "NB05", "NB06", 
                "NB07", "NB08", "BB01", "BB02", "BB03"]
     
