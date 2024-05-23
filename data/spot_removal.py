@@ -18,7 +18,7 @@ import glob
 from skimage.morphology import dilation, disk, erosion
 
 ####### USER-DEFINED #########
-ftr_name='NB08'
+ftr_name='NB06'
 overwrite=True #Files in the 'data/processed' directory will be replaced.
 plot=False
 ##############################

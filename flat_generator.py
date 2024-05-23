@@ -43,7 +43,7 @@ def calib_status(data, row, col, size):
     std_pc, mean= round(std*100/mean, 2), round(mean, 2)
     return(std_pc, mean)
 
-def profile(ftrname, data, row, col): 
+def profile(ftrname, data, row, col, saveplot=None): 
     '''
     To plot the image and generate line_profile of any numpy 2D Array
     data= 2D numpy array
@@ -64,7 +64,7 @@ def profile(ftrname, data, row, col):
     for ax in (ax1, ax2):
         ax.set(xlabel="Pixels")    
         ax.grid() 
-    plt.savefig(f'{project_path}reports/runtime_reports/{ftrname}.pdf')
+    if saveplot==True : plt.savefig(f'{project_path}reports/runtime_reports/{ftrname}.pdf')
     plt.show()
     
 def prep_header(ftrname, mfg, data_date):
@@ -88,6 +88,11 @@ def flat_generator(ftrname):
     #thres=0
     savename= "masked_scatter_corrected_reduced_avg_files_flat"
     #######################
+    if os.path.exists(sav): 
+        print(f"Saving flat fields at: {sav}\n")
+    else:
+        print("Write path does not exist. Aborting process.\n")
+        exit()
     
     print("Generating Flat for", ftrname)
     files= os.listdir(folder)
@@ -98,8 +103,8 @@ def flat_generator(ftrname):
         img_ls.append(data)
         
     lighten_img= lighten(img_ls) #blends the images in Lighten mode
-    small_scale_removed_img= blur(lighten_img, 50) #removes small scale structures (PRNU and CCD dust)
-    large_scale_img= blur(small_scale_removed_img, 220) #isolates large scale illumination changes.
+    small_scale_removed_img= blur(lighten_img, 25) #removes small scale structures (PRNU and CCD dust)
+    large_scale_img= blur(small_scale_removed_img, 500) #isolates large scale illumination changes.
     
     #removes large scale pattern from small scale removed image
     flat_field= blur(small_scale_removed_img/large_scale_img, 100) 
@@ -110,7 +115,7 @@ def flat_generator(ftrname):
     if save==True : hdu.writeto(sav+ftrname+'_shtr_'+shtr+"_"+savename+'_lvl1.fits', overwrite=True)
     
     #visualization
-    profile(ftrname, flat_field, 2048, 2048) #to plot image profile
+    profile(ftrname, flat_field_lvl1, 2048, 2048, saveplot=True) #to plot image profile
 
     #statistics
     print("***************")
@@ -125,14 +130,15 @@ def flat_generator(ftrname):
 if __name__=='__main__':
 
     #### USER-DEFINED ####
-    #ftrname="NB08"
-    mfg_date, data_date= '2024-05-19', '2024-01-29'
+    mfg_date, data_date= '2024-05-23', '2024-01-29'
     save= True #toggle to False to not save the image
     shtr= "0" #to be used in saved filename
     project_path= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/system_wide_flat_project/')
 
-    ftr_list= ["NB01", "NB02", "NB03", "NB04", "NB05", "NB06", 
-               "NB07", "NB08", "BB01", "BB02", "BB03"]
+    #ftr_list= ["NB01", "NB02", "NB03", "NB04", "NB05", "NB06", "NB07", "NB08", "BB01", "BB02", "BB03"]
+    #ftr_list= ["NB02", "NB05", "NB06", "NB07","BB02", "BB03"]
+    ftr_list= ["NB03", "NB04", "NB08"]
+
     
     with ProcessPoolExecutor() as execute:
         execute.map(flat_generator, ftr_list)

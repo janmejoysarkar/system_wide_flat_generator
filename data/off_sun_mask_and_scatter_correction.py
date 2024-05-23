@@ -28,9 +28,9 @@ def plot(data, col, row):
 
 if __name__=='__main__':
     ### USER DEFINED ###
-    ftrname= 'NB08'
+    ftrname= 'NB06'
     scatter_correction=False
-    visualize=True
+    visualize=False
     writefits=True
     #####################
     
