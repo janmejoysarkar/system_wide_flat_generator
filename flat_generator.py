@@ -6,6 +6,10 @@ Created on Sun Feb 11 08:22:32 2024
 -Generated to create system wide flat field from off pointing data.
 -Uses lighten blending mode.
 -2024-04-08: Modified to use with scatter corrected, masked data
+- Modified to use optimized upper limit for blurring
+-2024-06-20: Large scale blur size was changed from 500 to 630.
+-Small scale image/Large scale image was previously blurred with 100 px kernel
+-This blurring has been removed.
 @author: janmejoy
 """
 import matplotlib.pyplot as plt
@@ -71,6 +75,8 @@ def prep_header(ftrname, mfg, data_date):
     header=fits.Header()
     header['VERSION']=('beta', 'Version name for the Flat Field')
     header['FTR_NAME']=(ftrname, 'Filter Name for SUIT')
+    header['SML_KRNL']=(str(small_kernel), 'Small scale kernel')
+    header['LRG_KRNL']=(str(large_kernel), 'Large scale kernel')
     header['SHTR_STR']=(shtr, 'Shutter start position (0 or 180)')
     header['MFG_DATE']=(mfg, 'Manufacturing date for the FITS file')
     header['DATADATE']=(data_date,'Date of raw data recording')
@@ -82,10 +88,17 @@ def plot(data, caption): #plots any numpy array with imshow (caption= image titl
     plt.title(caption)
     plt.show()
 
+def edge_mask(data, thick):
+    #masking the edges
+    data[:thick+20]=1
+    data[-(thick+20):]=1
+    data[:,:thick+20]=1
+    data[:,-(thick+20):]=1
+    return(data)
+
 def flat_generator(ftrname):
     folder=project_path+'data/processed/'+ftrname+'/masked_scatter_corrected_averaged_files/'
-    sav= project_path+'products/shtr_0_reduced_avg_files_flat_lvl1/'
-    #thres=0
+    sav= project_path+f'products/{small_kernel}_{large_kernel}/'
     savename= "masked_scatter_corrected_reduced_avg_files_flat"
     #######################
     if os.path.exists(sav): 
@@ -99,21 +112,18 @@ def flat_generator(ftrname):
     img_ls=[]
     for file in files:
         data= fits.open(folder+file)[0].data
-        #data[data>thres]=0   #Intensity thresholding
         img_ls.append(data)
         
     lighten_img= lighten(img_ls) #blends the images in Lighten mode
-    small_scale_removed_img= blur(lighten_img, 25) #removes small scale structures (PRNU and CCD dust)
-    large_scale_img= blur(small_scale_removed_img, 500) #isolates large scale illumination changes.
-    
+    small_scale_removed_img= blur(lighten_img, small_kernel) #removes small scale structures (PRNU and CCD dust)
+    large_scale_img= blur(small_scale_removed_img, large_kernel) #isolates large scale illumination changes.
     #removes large scale pattern from small scale removed image
-    flat_field= blur(small_scale_removed_img/large_scale_img, 100) 
+    flat_field= small_scale_removed_img/large_scale_img
     flat_field_lvl1= np.transpose(flat_field)
-    
+    flat_field_lvl1= edge_mask(flat_field_lvl1, int(large_kernel/2)+20)
     hdu= fits.PrimaryHDU(flat_field_lvl1, header=prep_header(ftrname, mfg_date, data_date))
     #saves the fits file
     if save==True : hdu.writeto(sav+ftrname+'_shtr_'+shtr+"_"+savename+'_lvl1.fits', overwrite=True)
-    
     #visualization
     profile(ftrname, flat_field_lvl1, 2048, 2048, saveplot=True) #to plot image profile
 
@@ -128,24 +138,16 @@ def flat_generator(ftrname):
     
     
 if __name__=='__main__':
-
     #### USER-DEFINED ####
-    mfg_date, data_date= '2024-05-23', '2024-01-29'
+    mfg_date, data_date= '2024-06-20', '2024-01-29'
+    small_kernel, large_kernel= 50, 630
     save= True #toggle to False to not save the image
     shtr= "0" #to be used in saved filename
     project_path= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/system_wide_flat_project/')
+    flat_generator('BB03')
 
-    #ftr_list= ["NB01", "NB02", "NB03", "NB04", "NB05", "NB06", "NB07", "NB08", "BB01", "BB02", "BB03"]
-    #ftr_list= ["NB02", "NB05", "NB06", "NB07","BB02", "BB03"]
-    ftr_list= ["NB03", "NB04", "NB08"]
-
-    
+    '''
+    ftr_list= ["NB01", "NB02", "NB03", "NB04", "NB05", "NB06", "NB07", "NB08", "BB01", "BB02", "BB03"]
     with ProcessPoolExecutor() as execute:
         execute.map(flat_generator, ftr_list)
-        
-        
-        
-        
-        
-        
-        
+    '''
