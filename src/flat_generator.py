@@ -15,10 +15,10 @@ Created on Sun Feb 11 08:22:32 2024
 import matplotlib.pyplot as plt
 from astropy.io import fits
 import numpy as np
-from astropy.convolution import convolve
-from astropy.convolution import Box2DKernel
+#from astropy.convolution import convolve
+#from astropy.convolution import Box2DKernel
 import os
-from concurrent.futures import ProcessPoolExecutor
+#from concurrent.futures import ProcessPoolExecutor
 
 def blur(data, kernel): #blurring function
     return(convolve(data, Box2DKernel(kernel), normalize_kernel=True))
@@ -36,57 +36,57 @@ def lighten(image_list):
                     lighten_blend[i,j]=image[i,j]
     return(lighten_blend)
 
-def calib_status(data, row, col, size):
-    '''
-    returns % std and mean within a box
-    row, col, size: position and size of box to be used.
-    '''
-    data_crop=data[row-size:row+size, col-size:col+size]
-    std=np.std(data_crop)
-    mean= np.mean(data_crop)
-    std_pc, mean= round(std*100/mean, 2), round(mean, 2)
-    return(std_pc, mean)
-
-def profile(ftrname, data, row, col, saveplot=None): 
-    '''
-    To plot the image and generate line_profile of any numpy 2D Array
-    data= 2D numpy array
-    row, col= coordinates for line profiles
-    '''
-    fig= plt.figure(figsize=(8,4), dpi=300)
-    (ax1, ax2)=fig.subplots(1,2)
-    plt.suptitle(mfg_date+"_Intensity profiles across flat field- "+ftrname)   
-    ax1.imshow(data, origin='lower', vmin=0.9, vmax=1.1)
-    ax1.axhline(row, color='red')
-    ax1.axvline(col, color='blue')
-    ax1.set(ylabel="Pixels")
-    
-    ax2.plot(data[row], color='red', label= "Horizontal cut")
-    ax2.plot(data[:,col], color='blue', label= "Verical cut")
-    ax2.set(ylabel="Counts")
-    ax2.legend()
-    for ax in (ax1, ax2):
-        ax.set(xlabel="Pixels")    
-        ax.grid() 
-    if saveplot==True : plt.savefig(f'{project_path}reports/runtime_reports/{ftrname}.pdf')
-    plt.show()
-    
-def prep_header(ftrname, mfg, data_date):
-    header=fits.Header()
-    header['VERSION']=('beta', 'Version name for the Flat Field')
-    header['FTR_NAME']=(ftrname, 'Filter Name for SUIT')
-    header['SML_KRNL']=(str(small_kernel), 'Small scale kernel')
-    header['LRG_KRNL']=(str(large_kernel), 'Large scale kernel')
-    header['SHTR_STR']=(shtr, 'Shutter start position (0 or 180)')
-    header['MFG_DATE']=(mfg, 'Manufacturing date for the FITS file')
-    header['DATADATE']=(data_date,'Date of raw data recording')
-    return (header)
-
-def plot(data, caption): #plots any numpy array with imshow (caption= image title)
-    plt.figure()
-    plt.imshow(data, origin='lower')
-    plt.title(caption)
-    plt.show()
+#def calib_status(data, row, col, size):
+#    '''
+#    returns % std and mean within a box
+#    row, col, size: position and size of box to be used.
+#    '''
+#    data_crop=data[row-size:row+size, col-size:col+size]
+#    std=np.std(data_crop)
+#    mean= np.mean(data_crop)
+#    std_pc, mean= round(std*100/mean, 2), round(mean, 2)
+#    return(std_pc, mean)
+#
+#def profile(ftrname, data, row, col, saveplot=None): 
+#    '''
+#    To plot the image and generate line_profile of any numpy 2D Array
+#    data= 2D numpy array
+#    row, col= coordinates for line profiles
+#    '''
+#    fig= plt.figure(figsize=(8,4), dpi=300)
+#    (ax1, ax2)=fig.subplots(1,2)
+#    plt.suptitle(mfg_date+"_Intensity profiles across flat field- "+ftrname)   
+#    ax1.imshow(data, origin='lower', vmin=0.9, vmax=1.1)
+#    ax1.axhline(row, color='red')
+#    ax1.axvline(col, color='blue')
+#    ax1.set(ylabel="Pixels")
+#    
+#    ax2.plot(data[row], color='red', label= "Horizontal cut")
+#    ax2.plot(data[:,col], color='blue', label= "Verical cut")
+#    ax2.set(ylabel="Counts")
+#    ax2.legend()
+#    for ax in (ax1, ax2):
+#        ax.set(xlabel="Pixels")    
+#        ax.grid() 
+#    if saveplot==True : plt.savefig(f'{project_path}reports/runtime_reports/{ftrname}.pdf')
+#    plt.show()
+#    
+#def prep_header(ftrname, mfg, data_date):
+#    header=fits.Header()
+#    header['VERSION']=('beta', 'Version name for the Flat Field')
+#    header['FTR_NAME']=(ftrname, 'Filter Name for SUIT')
+#    header['SML_KRNL']=(str(small_kernel), 'Small scale kernel')
+#    header['LRG_KRNL']=(str(large_kernel), 'Large scale kernel')
+#    header['SHTR_STR']=(shtr, 'Shutter start position (0 or 180)')
+#    header['MFG_DATE']=(mfg, 'Manufacturing date for the FITS file')
+#    header['DATADATE']=(data_date,'Date of raw data recording')
+#    return (header)
+#
+#def plot(data, caption): #plots any numpy array with imshow (caption= image title)
+#    plt.figure()
+#    plt.imshow(data, origin='lower')
+#    plt.title(caption)
+#    plt.show()
 
 def edge_mask(data, thick):
     #masking the edges
@@ -115,27 +115,27 @@ def flat_generator(ftrname):
         img_ls.append(data)
         
     lighten_img= lighten(img_ls) #blends the images in Lighten mode
-    small_scale_removed_img= blur(lighten_img, small_kernel) #removes small scale structures (PRNU and CCD dust)
-    large_scale_img= blur(small_scale_removed_img, large_kernel) #isolates large scale illumination changes.
-    #removes large scale pattern from small scale removed image
-    flat_field= small_scale_removed_img/large_scale_img
-    flat_field_lvl1= np.transpose(flat_field)
-    flat_field_lvl1= edge_mask(flat_field_lvl1, int(large_kernel/2)+20)
-    hdu= fits.PrimaryHDU(flat_field_lvl1, header=prep_header(ftrname, mfg_date, data_date))
-    #saves the fits file
-    if save==True : hdu.writeto(sav+ftrname+'_shtr_'+shtr+"_"+savename+'_lvl1.fits', overwrite=True)
-    #visualization
-    profile(ftrname, flat_field_lvl1, 2048, 2048, saveplot=True) #to plot image profile
+    #small_scale_removed_img= blur(lighten_img, small_kernel) #removes small scale structures (PRNU and CCD dust)
+    #large_scale_img= blur(small_scale_removed_img, large_kernel) #isolates large scale illumination changes.
+    ##removes large scale pattern from small scale removed image
+    #flat_field= small_scale_removed_img/large_scale_img
+    #flat_field_lvl1= np.transpose(flat_field)
+    #flat_field_lvl1= edge_mask(flat_field_lvl1, int(large_kernel/2)+20)
+    #hdu= fits.PrimaryHDU(flat_field_lvl1, header=prep_header(ftrname, mfg_date, data_date))
+    ##saves the fits file
+    #if save==True : hdu.writeto(sav+ftrname+'_shtr_'+shtr+"_"+savename+'_lvl1.fits', overwrite=True)
+    ##visualization
+    #profile(ftrname, flat_field_lvl1, 2048, 2048, saveplot=True) #to plot image profile
 
-    #statistics
-    print("***************")
-    print(ftrname)
-    print("Pos(200px Box) \t %Std, Mean")
-    print("(1000, 1000)", calib_status(flat_field, 1000, 1000, 100))
-    print("(2000, 2000)",calib_status(flat_field, 2000, 2000, 100))
-    print("(3000, 3000)",calib_status(flat_field, 3000, 3000, 100))
-    print("***************")
-    
+    ##statistics
+    #print("***************")
+    #print(ftrname)
+    #print("Pos(200px Box) \t %Std, Mean")
+    #print("(1000, 1000)", calib_status(flat_field, 1000, 1000, 100))
+    #print("(2000, 2000)",calib_status(flat_field, 2000, 2000, 100))
+    #print("(3000, 3000)",calib_status(flat_field, 3000, 3000, 100))
+    #print("***************")
+    return(lighten_img)
     
 if __name__=='__main__':
     #### USER-DEFINED ####
@@ -144,9 +144,19 @@ if __name__=='__main__':
     save= True #toggle to False to not save the image
     shtr= "0" #to be used in saved filename
     project_path= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/system_wide_flat_project/')
-    flat_generator('BB03')
+    lighten_image=flat_generator('BB03')
+    #plotting#
+    corrected= np.flipud(np.rot90(lighten_image, 1))
+    plt.figure('Lighten', figsize=(6,4), dpi=300)
+    plt.imshow(corrected, origin='lower')
+    plt.ylabel("Pixels", fontsize=12)
+    plt.xlabel("Pixels", fontsize=12)
+    plt.tick_params(axis='both', which='major', labelsize=10)
+    plt.savefig(project_path+'reports/test_and_calib_paper/lighten_blend.pdf')
+    plt.show()
 
     '''
+    #For paralellizing flat generation for all filters-
     ftr_list= ["NB01", "NB02", "NB03", "NB04", "NB05", "NB06", "NB07", "NB08", "BB01", "BB02", "BB03"]
     with ProcessPoolExecutor() as execute:
         execute.map(flat_generator, ftr_list)
