@@ -10,15 +10,20 @@ Created on Sun Feb 11 08:22:32 2024
 -2024-06-20: Large scale blur size was changed from 500 to 630.
 -Small scale image/Large scale image was previously blurred with 100 px kernel
 -This blurring has been removed.
+
+*** NOTE ***
+
+This branch is made for Test and Calib paper and ASWG closeouts only.
+This is code is modified to make lighten blended illumination pattern of the CCD.
+
+************
+
 @author: janmejoy
 """
 import matplotlib.pyplot as plt
 from astropy.io import fits
 import numpy as np
-#from astropy.convolution import convolve
-#from astropy.convolution import Box2DKernel
 import os
-#from concurrent.futures import ProcessPoolExecutor
 
 def blur(data, kernel): #blurring function
     return(convolve(data, Box2DKernel(kernel), normalize_kernel=True))
@@ -98,8 +103,8 @@ def edge_mask(data, thick):
 
 def flat_generator(ftrname):
     folder=project_path+'data/processed/'+ftrname+'/masked_scatter_corrected_averaged_files/'
-    sav= project_path+f'products/{small_kernel}_{large_kernel}/'
-    savename= "masked_scatter_corrected_reduced_avg_files_flat"
+    sav= project_path+f'products/'
+    savename= "lighten_illumination"
     #######################
     if os.path.exists(sav): 
         print(f"Saving flat fields at: {sav}\n")
@@ -114,16 +119,16 @@ def flat_generator(ftrname):
         data= fits.open(folder+file)[0].data
         img_ls.append(data)
         
-    lighten_img= lighten(img_ls) #blends the images in Lighten mode
+    lighten_img= lighten(img_ls).T #blends the images in Lighten mode
     #small_scale_removed_img= blur(lighten_img, small_kernel) #removes small scale structures (PRNU and CCD dust)
     #large_scale_img= blur(small_scale_removed_img, large_kernel) #isolates large scale illumination changes.
     ##removes large scale pattern from small scale removed image
     #flat_field= small_scale_removed_img/large_scale_img
     #flat_field_lvl1= np.transpose(flat_field)
     #flat_field_lvl1= edge_mask(flat_field_lvl1, int(large_kernel/2)+20)
-    #hdu= fits.PrimaryHDU(flat_field_lvl1, header=prep_header(ftrname, mfg_date, data_date))
+    hdu= fits.PrimaryHDU(lighten_img)#, header=prep_header(ftrname, mfg_date, data_date))
     ##saves the fits file
-    #if save==True : hdu.writeto(sav+ftrname+'_shtr_'+shtr+"_"+savename+'_lvl1.fits', overwrite=True)
+    if save==True : hdu.writeto(sav+ftrname+'_shtr_'+shtr+"_"+savename+'_lvl1.fits', overwrite=True)
     ##visualization
     #profile(ftrname, flat_field_lvl1, 2048, 2048, saveplot=True) #to plot image profile
 
@@ -145,18 +150,8 @@ if __name__=='__main__':
     shtr= "0" #to be used in saved filename
     project_path= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/system_wide_flat_project/')
     lighten_image=flat_generator('BB03')
-    #plotting#
-    corrected= np.flipud(np.rot90(lighten_image, 1))
-    plt.figure('Lighten', figsize=(6,4), dpi=300)
-    plt.imshow(corrected, origin='lower')
-    plt.ylabel("Pixels", fontsize=12)
-    plt.xlabel("Pixels", fontsize=12)
-    plt.tick_params(axis='both', which='major', labelsize=10)
-    plt.savefig(project_path+'reports/test_and_calib_paper/lighten_blend.pdf')
-    plt.show()
 
     '''
-    #For paralellizing flat generation for all filters-
     ftr_list= ["NB01", "NB02", "NB03", "NB04", "NB05", "NB06", "NB07", "NB08", "BB01", "BB02", "BB03"]
     with ProcessPoolExecutor() as execute:
         execute.map(flat_generator, ftr_list)
